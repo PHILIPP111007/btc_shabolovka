@@ -1,0 +1,243 @@
+.FriendCard .username,
+.Chat .info a {
+    color: rgb(134, 134, 134);
+}
+
+
+/* Light Theme */
+
+.light_theme button,
+.light_theme input[type="submit"],
+.light_theme input[type="reset"] {
+    background-color: rgb(205, 205, 205);
+    color: rgb(44, 42, 42);
+}
+
+.light_theme textarea {
+    background-color: rgb(250, 244, 244);
+    color: rgb(0, 0, 0);
+}
+
+.light_theme input[type="text"],
+.light_theme input[type="email"],
+input[type=file]::file-selector-button {
+    background-color: rgb(250, 244, 244);
+    color: rgb(44, 42, 42);
+}
+
+.light_theme {
+    background-color: rgb(250, 244, 244);
+    color: rgb(0, 0, 0);
+
+    .App {
+        background-color: rgb(250, 244, 244);
+        color: rgb(0, 0, 0);
+    }
+
+    .UpperLine,
+    .NavBar,
+    .FriendsNavBar {
+        background-color: rgb(235, 235, 235);
+    }
+
+    .RoomNavBar {
+        background-color: rgb(235, 235, 235);
+    }
+
+    .SettingsBar {
+        background-color: rgb(235, 235, 235);
+        border-color: rgb(202, 195, 195);
+    }
+
+    .NavBar a:hover,
+    .FriendsNavBar a:hover,
+    .RoomNavBar a:hover {
+        background-color: rgb(220, 220, 220);
+    }
+
+    .UserCard,
+    .W3Card,
+    .TransactionCard {
+        background-color: rgb(202, 195, 195);
+        color: rgb(0, 0, 0);
+    }
+
+    .Post,
+    .RoomCard,
+    .RoomInvitationCard,
+    .ModalRoomCreate .card,
+    .ModalRoomEdit .card,
+    .FriendCard,
+    .LanguageSelect,
+    .FriendsSelect,
+    .Chat .Message,
+    .Chat .ParentMessage {
+        background-color: rgb(230, 230, 230);
+    }
+
+    .Post .title,
+    .Post a {
+        color: rgb(134, 134, 134);
+    }
+
+    .RoomCard a,
+    .RoomInvitationCard a,
+    .Message a {
+        color: rgb(0, 0, 0);
+    }
+
+    .ModalRoomCreate,
+    .ModalRoomEdit,
+    .ModalSettings,
+    .ModalPostEdit,
+    .uploadFileForm,
+    .ModalDelAcc,
+    .ModalMessage {
+        background: rgb(250, 244, 244);
+    }
+
+    .FriendCard,
+    .FriendCard .name,
+    .Form {
+        color: rgb(0, 0, 0);
+    }
+
+    .Chat #SendButton,
+    .Chat #SettingsButton,
+    .Form {
+        background: rgb(250, 244, 244);
+    }
+
+    .LanguageSelect,
+    .FriendsSelect {
+        color: rgb(0, 0, 0);
+    }
+}
+
+
+/* Dark Theme */
+
+.dark_theme a {
+    color: rgb(205, 205, 205);
+}
+
+.dark_theme button,
+.dark_theme input,
+.dark_theme input[type="submit"],
+.dark_theme input[type="reset"],
+.dark_theme .form-control,
+input[type=file]::file-selector-button {
+    background-color: rgb(101, 101, 110);
+    color: rgb(205, 205, 205);
+}
+
+.dark_theme input::placeholder {
+    color: rgb(80, 80, 80);
+}
+
+
+.dark_theme textarea {
+    background-color: rgb(43, 43, 43);
+    color: rgb(205, 205, 205);
+}
+
+.dark_theme input[type="text"],
+.dark_theme input[type="email"] {
+    background-color: rgb(43, 43, 43);
+    color: rgb(205, 205, 205);
+}
+
+.dark_theme {
+    background-color: rgb(43, 43, 43);
+    color: rgb(205, 205, 205);
+
+    .App {
+        background-color: rgb(43, 43, 43);
+        color: rgb(205, 205, 205);
+    }
+
+    .UpperLine,
+    .NavBar,
+    .FriendsNavBar {
+        background-color: rgb(61, 61, 71);
+    }
+
+    .RoomNavBar {
+        background-color: rgb(61, 61, 71);
+    }
+
+    .SettingsBar {
+        background-color: rgb(61, 61, 71);
+        border-color: rgb(80, 80, 90);
+    }
+
+    .NavBar a,
+    .FriendsNavBar a,
+    .RoomNavBar a {
+        color: rgb(205, 205, 205);
+    }
+
+    .NavBar a:hover,
+    .FriendsNavBar a:hover,
+    .RoomNavBar a:hover {
+        background-color: rgba(50, 50, 50);
+    }
+
+    .UserCard,
+    .W3Card,
+    .TransactionCard,
+    .UserInput .TextArea {
+        background-color: rgb(57, 57, 61);
+        color: rgb(205, 205, 205);
+    }
+
+    .Post,
+    .RoomCard,
+    .RoomInvitationCard,
+    .ModalRoomCreate .card,
+    .ModalRoomEdit .card,
+    .FriendCard,
+    .uploadFileForm,
+    .LanguageSelect,
+    .FriendsSelect,
+    .Chat .Message,
+    .Chat .ParentMessage {
+        background-color: rgb(57, 57, 61);
+    }
+
+    .Post .title,
+    .Post a {
+        color: rgb(134, 134, 134);
+    }
+
+    .RoomCard .link,
+    .Message a {
+        color: rgb(205, 205, 205);
+    }
+
+    .ModalRoomCreate,
+    .ModalRoomEdit,
+    .ModalSettings,
+    .ModalPostEdit,
+    .ModalDelAcc,
+    .ModalMessage,
+    .Form {
+        background: rgb(43, 43, 43);
+    }
+
+    .FriendCard,
+    .FriendCard .name {
+        color: rgb(205, 205, 205);
+    }
+
+    .Chat #SendButton,
+    .Chat #SettingsButton {
+        background: rgb(43, 43, 43);
+    }
+
+    .LanguageSelect,
+    .FriendsSelect,
+    .Form {
+        color: rgb(255, 255, 255);
+    }
+}

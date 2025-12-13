@@ -1,0 +1,529 @@
+import "./styles/User.css"
+import DEFAULT_IMAGE_PATH from "../../images/photo_plan.jpeg"
+import { useState, useRef, useEffect, useCallback, use } from "react"
+import { useParams } from "react-router-dom"
+import Plot from "react-plotly.js"
+import { AuthContext, UserContext } from "../../data/context.js"
+import { HttpMethod, APIVersion } from "../../data/enums.js"
+import { useSetUser } from "../../hooks/useAuth.js"
+import { notify_success } from "../../modules/notify.js"
+import Fetch from "../../API/Fetch.js"
+
+const DateTimePlot = (filteredConversations) => {
+    const data = filteredConversations.map(item => ({
+        user: item.user,
+        start: new Date(item.timestamp_start),
+        end: new Date(item.timestamp_end)
+    }))
+
+    // Create separate traces for start and end markers, connected by lines
+    const plotData = [{
+        x: data.flatMap(d => [d.start, d.end, null]), // Add 'null' to break lines
+        y: data.flatMap(d => [d.user, d.user, null]),
+        mode: 'lines+markers',
+        line: { color: 'grey', width: 2 },
+        marker: {
+            size: 10,
+            color: ['blue', 'red'].flatMap(color => [color, color, color]) // Pattern: start, end, break
+        },
+        name: 'Occupancy Period',
+        hovertemplate: '%{y}<br>Time: %{x}<extra></extra>'
+    }]
+
+    const layout = {
+        title: 'Room Occupancy Timeline',
+        xaxis: {
+            title: 'Time',
+            type: 'date', // CRITICAL: Tells Plotly this is a date axis
+            tickformat: '%Y-%m-%d %H:%M' // Optional: Control date display format
+        },
+        yaxis: {
+            title: 'Room',
+            type: 'category'
+        },
+        showlegend: false,
+        width: 800,
+        height: 500,
+    }
+
+    return <Plot data={plotData} layout={layout} />
+}
+
+export default function App() {
+    var params = useParams()
+    var { setIsAuth } = use(AuthContext)
+    var { user, setUser } = use(UserContext)
+    useSetUser({ username: params.username, setUser: setUser })
+    var [conversations, setConversations] = useState([])
+    var [filteredConversations, setFilteredConversations] = useState([])
+
+    var [timeStampStart, setTimeStampStart] = useState(null)
+    var [timeStampEnd, setTimeStampEnd] = useState(null)
+
+    var selectedColor = "#2ecc71"
+    var canvasRef = useRef(null)
+    var [selectedRoom, setSelectedRoom] = useState(null)
+    var [backgroundImage, setBackgroundImage] = useState(null)
+    var [isImageLoaded, setIsImageLoaded] = useState(false)
+    var [isLoading, setIsLoading] = useState(false)
+    var [selectionInfo, setSelectionInfo] = useState(null)
+    var [hoveredObject, setHoveredObject] = useState(null)
+
+    // Данные о помещениях и номерах
+    var [rooms, setRooms] = useState([])
+
+    var initializeRooms = () => {
+        return {
+            roomA: {
+                id: "1",
+                name: "Помещение A",
+                points: [{ x: 50, y: 100 }, { x: 240, y: 100 }, { x: 240, y: 260 }, { x: 50, y: 260 }],
+                color: "rgba(248, 249, 250, 0.3)",
+                originalColor: "rgba(248, 249, 250, 0.3)",
+                type: "room"
+            },
+            roomB: {
+                id: "2",
+                name: "Помещение Б",
+                points: [{ x: 250, y: 100 }, { x: 390, y: 100 }, { x: 390, y: 260 }, { x: 250, y: 260 }],
+                color: "rgba(248, 249, 250, 0.3)",
+                originalColor: "rgba(248, 249, 250, 0.3)",
+                type: "room"
+            },
+            roomC: {
+                id: "3",
+                name: "Помещение В",
+                points: [{ x: 500, y: 100 }, { x: 800, y: 100 }, { x: 800, y: 260 }, { x: 500, y: 260 }],
+                color: "rgba(248, 249, 250, 0.3)",
+                originalColor: "rgba(248, 249, 250, 0.3)",
+                type: "room"
+            },
+            roomD: {
+                id: "4",
+                name: "Помещение В1",
+                points: [{ x: 250, y: 280 }, { x: 950, y: 280 }, { x: 950, y: 400 }],
+                color: "rgba(248, 249, 250, 0.3)",
+                originalColor: "rgba(248, 249, 250, 0.3)",
+                type: "room"
+            },
+        }
+    }
+
+    // Обновление размеров canvas
+    var updateCanvasSize = (img) => {
+        var canvas = canvasRef.current
+        if (!canvas) return
+
+        var maxWidth = 1000
+        var maxHeight = 680
+
+        let newWidth = img.width
+        let newHeight = img.height
+
+        var scale
+
+        if (newWidth > maxWidth) {
+            scale = maxWidth / newWidth
+            newWidth = maxWidth
+            newHeight = newHeight * scale
+        }
+
+        if (newHeight > maxHeight) {
+            scale = maxHeight / newHeight
+            newHeight = maxHeight
+            newWidth = newWidth * scale
+        }
+
+        canvas.width = newWidth
+        canvas.height = newHeight
+    }
+
+    // Отрисовка на canvas
+    var draw = useCallback(() => {
+        var canvas = canvasRef.current
+        if (!canvas) return
+
+        var ctx = canvas.getContext("2d")
+        ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+        // Рисуем фоновое изображение
+        if (isImageLoaded && backgroundImage) {
+            ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height)
+        } else {
+            // Рисуем фон если нет изображения
+            ctx.fillStyle = "#f8f9fa"
+            ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+            // Информационное сообщение
+            ctx.fillStyle = "#7f8c8d"
+            ctx.font = "20px Arial"
+            ctx.textAlign = "center"
+            ctx.fillText("Стандартная карта помещений", canvas.width / 2, 30)
+            ctx.font = "16px Arial"
+            ctx.fillText("Загрузите изображение плана помещения", canvas.width / 2, 60)
+        }
+
+        // Рисуем помещения
+        Object.values(rooms).forEach(room => {
+            ctx.fillStyle = room.color
+            ctx.strokeStyle = "#026f02ff"
+            ctx.lineWidth = 3
+
+            ctx.beginPath()
+            ctx.moveTo(room.points[0].x, room.points[0].y)
+            for (let i = 1; i < room.points.length; i++) {
+                ctx.lineTo(room.points[i].x, room.points[i].y)
+            }
+            ctx.closePath()
+            ctx.fill()
+            ctx.stroke()
+        })
+
+        // Подсветка наведенного объекта
+        if (hoveredObject) {
+            ctx.strokeStyle = "#f39c12"
+            ctx.lineWidth = 3
+
+            if (hoveredObject.type === "room") {
+                ctx.beginPath()
+                ctx.moveTo(hoveredObject.points[0].x, hoveredObject.points[0].y)
+                for (let i = 1; i < hoveredObject.points.length; i++) {
+                    ctx.lineTo(hoveredObject.points[i].x, hoveredObject.points[i].y)
+                }
+                ctx.closePath()
+                ctx.stroke()
+            } else if (hoveredObject.type === "number") {
+                ctx.strokeRect(
+                    hoveredObject.x,
+                    hoveredObject.y,
+                    hoveredObject.width,
+                    hoveredObject.height
+                )
+            }
+        }
+    }, [rooms, backgroundImage, isImageLoaded, hoveredObject])
+
+    var loadDefaultImage = () => {
+        setIsLoading(true)
+
+        var img = new Image()
+
+        img.onload = () => {
+            setBackgroundImage(img)
+            setIsImageLoaded(true)
+            setIsLoading(false)
+            updateCanvasSize(img)
+            draw()
+        }
+
+        img.onerror = () => {
+            console.error("Не удалось загрузить изображение по пути:", DEFAULT_IMAGE_PATH)
+            setIsLoading(false)
+        }
+
+        // Загружаем изображение из public папки
+        img.src = DEFAULT_IMAGE_PATH
+    }
+
+    // Обновляем useEffect
+    useEffect(() => {
+        // Инициализация помещений
+        var roomsData = initializeRooms()
+        setRooms(roomsData)
+
+        // Загрузка изображения
+        loadDefaultImage()
+    }, []) // Пустой массив зависимостей
+
+    // Инициализация
+    useEffect(() => {
+        initializeRooms()
+        loadDefaultImage()
+    }, [])
+
+    // Обновляем useEffect
+    useEffect(() => {
+        var initApp = () => {
+            // Инициализация помещений (если не инициализированы в useState)
+            if (Object.keys(rooms).length === 0) {
+                var roomsData = initializeRooms()
+                setRooms(roomsData)
+            }
+
+            // Загрузка изображения с задержкой для избежания синхронных обновлений
+            setTimeout(() => {
+                loadDefaultImage()
+            }, 0)
+        }
+
+        initApp()
+    }, []); // Пустой массив зависимостей
+
+    // Проверка точки в полигоне
+    var isPointInPolygon = (x, y, polygon) => {
+        let inside = false
+        for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+            var xi = polygon[i].x, yi = polygon[i].y
+            var xj = polygon[j].x, yj = polygon[j].y
+
+            var intersect = ((yi > y) !== (yj > y))
+                && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)
+
+            if (intersect) inside = !inside
+        }
+        return inside
+    }
+
+    // Обработка клика по canvas
+    var handleCanvasClick = (e) => {
+        var canvas = canvasRef.current
+        if (!canvas) return
+
+        var rect = canvas.getBoundingClientRect()
+        var x = e.clientX - rect.left
+        var y = e.clientY - rect.top
+
+        handleRoomClick(x, y)
+
+        draw()
+        updateSelectionInfo()
+    }
+
+    // Обработка клика по помещению
+    var handleRoomClick = (x, y) => {
+        let clickedRoom = null
+
+        // Находим помещение по координатам
+        Object.values(rooms).forEach(room => {
+            if (isPointInPolygon(x, y, room.points)) {
+                clickedRoom = room
+            }
+        })
+
+        if (clickedRoom) {
+            // Если кликнули на уже выделенное помещение
+            if (selectedRoom && selectedRoom.id === clickedRoom.id) {
+                // Отрицание разукраски
+                if (clickedRoom.color !== clickedRoom.originalColor) {
+                    // Сбрасываем цвет
+                    setRooms(prev => ({
+                        ...prev,
+                        [clickedRoom.id]: {
+                            ...clickedRoom,
+                            color: clickedRoom.originalColor
+                        }
+                    }))
+                    setSelectedRoom(null)
+                } else {
+                    // Красим в выбранный цвет
+                    setRooms(prev => ({
+                        ...prev,
+                        [clickedRoom.id]: {
+                            ...clickedRoom,
+                            color: selectedColor
+                        }
+                    }))
+                }
+            } else {
+                // Если кликнули на другое помещение
+                // Сбрасываем предыдущее выделение
+                if (selectedRoom) {
+                    setRooms(prev => ({
+                        ...prev,
+                        [selectedRoom.id]: {
+                            ...selectedRoom,
+                            color: selectedRoom.originalColor
+                        }
+                    }))
+                }
+
+                // Выделяем новое помещение
+                setSelectedRoom(clickedRoom)
+                setRooms(prev => ({
+                    ...prev,
+                    [clickedRoom.id]: {
+                        ...clickedRoom,
+                        color: selectedColor
+                    }
+                }))
+            }
+        } else {
+            // Кликнули вне помещения
+            if (selectedRoom) {
+                setRooms(prev => ({
+                    ...prev,
+                    [selectedRoom.id]: {
+                        ...selectedRoom,
+                        color: selectedRoom.originalColor
+                    }
+                }))
+                setSelectedRoom(null)
+            }
+        }
+    }
+
+    // Обработка наведения мыши
+    var handleMouseMove = (e) => {
+        var canvas = canvasRef.current
+        if (!canvas) return
+
+        var rect = canvas.getBoundingClientRect()
+        var x = e.clientX - rect.left
+        var y = e.clientY - rect.top
+
+        let hovered = null
+
+        // Проверяем помещения
+        Object.values(rooms).forEach(room => {
+            if (isPointInPolygon(x, y, room.points)) {
+                hovered = room
+            }
+        })
+
+        setHoveredObject(hovered)
+
+        // Меняем курсор
+        canvas.style.cursor = hovered ? "pointer" : "default"
+    }
+
+    // Обновление информации о выборе
+    var updateSelectionInfo = () => {
+        if (selectedRoom) {
+            setSelectionInfo(selectedRoom.name)
+
+            var filteredConversationsByRoom = conversations.filter((conversation) => {
+                return conversation.room === selectedRoom.name
+            })
+            setFilteredConversations(() => [...filteredConversationsByRoom])
+        }
+    }
+
+    async function get_conversation() {
+        var data = await Fetch({ api_version: APIVersion.V2, action: "get_conversation/", method: HttpMethod.GET })
+
+        if (data.ok) {
+            setConversations(data.conversations)
+            setFilteredConversations(data.conversations)
+        }
+    }
+
+    async function add_conversation() {
+        var body = {
+            user: String(user.username),
+            room: String(selectionInfo),
+            timestamp_start: String(timeStampStart),
+            timestamp_end: String(timeStampEnd),
+        }
+
+        var data = await Fetch({ api_version: APIVersion.V2, action: "add_conversation/", method: HttpMethod.POST, body: body })
+
+        if (data.ok) {
+            notify_success("Дата сохранена")
+        }
+    }
+
+    async function deleteConversation(conversation_id) {
+        var data = await Fetch({ api_version: APIVersion.V2, action: `delete_conversation/${conversation_id}/`, method: HttpMethod.DELETE })
+
+        if (data.ok) {
+            notify_success("Дата удалена")
+
+            var filteredConversationsAfterDelete = conversations.filter((conversation) => {
+                return conversation.id !== conversation_id
+            })
+            setConversations(() => [...filteredConversationsAfterDelete])
+            setFilteredConversations(() => [...filteredConversationsAfterDelete])
+        }
+    }
+
+    function logout() {
+        localStorage.clear()
+        setIsAuth(false)
+    }
+
+    // Обновление отрисовки при изменении данных
+    useEffect(() => {
+        draw()
+        updateSelectionInfo()
+    }, [rooms, selectedRoom, draw])
+
+    useEffect(() => {
+        get_conversation()
+    }, [])
+
+    return (
+        <div className="app">
+            <button onClick={() => logout()}>Выйти</button>
+            <br />
+            <br />
+            <br />
+
+            <div className="main-content">
+                <div className="canvas-section">
+                    <div className="canvas-container">
+                        <canvas
+                            ref={canvasRef}
+                            width="1000"
+                            height="680"
+                            onClick={handleCanvasClick}
+                            onMouseMove={handleMouseMove}
+                        />
+                        {isLoading && (
+                            <div className="loading-overlay">
+                                <div className="loading-spinner"></div>
+                                <p>Загрузка изображения...</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                <div className="controls-section">
+                    <div className="panel control-panel">
+                        <div className="selection-info">
+                            <h3>Выбранные помещения:</h3>
+                            <p>{selectionInfo}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div>Начало совещания:</div>
+            <input
+                className="form-control"
+                type="datetime-local"
+                value={timeStampStart}
+                onChange={(e) => setTimeStampStart(e.target.value)}
+            />
+            <div>Конец совещания:</div>
+            <input
+                className="form-control"
+                type="datetime-local"
+                value={timeStampEnd}
+                onChange={(e) => setTimeStampEnd(e.target.value)}
+            />
+            <br />
+            <button
+                className="setConversationButton"
+                onClick={() => add_conversation()}
+            >
+                Добавить
+            </button>
+            <br />
+            <br />
+
+            {
+                filteredConversations.map((conversation) =>
+                    <div className="Conversation" key={conversation.id}>
+                        {conversation.user} "{conversation.room}" {conversation.timestamp_start} -- {conversation.timestamp_end}
+
+                        {
+                            conversation.user === user.username &&
+                            <button onClick={() => deleteConversation(conversation.id)}>Удалить</button>
+                        }
+                    </div>
+                )
+            }
+
+            {selectionInfo && DateTimePlot(filteredConversations)}
+        </div>
+    )
+}

@@ -1,0 +1,105 @@
+services:
+  django:
+    container_name: django
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: ./dockerfiles/django/Dockerfile
+    expose:
+      - 8080
+    depends_on:
+      - db
+    command: >
+      sh -c "python manage.py collectstatic --noinput &&
+            python manage.py migrate &&
+            bash granian.sh"
+    networks:
+      - nginx_network
+      - db_network
+      - s3_network
+      - cache_network
+    environment:
+      PG_NAME: postgres
+      PG_USER: postgres
+      PG_HOST: db
+      PG_PORT: "5432"
+      PG_PASSWORD: postgres
+      SECRET_KEY: weofjweifjewifjewifjewfewf
+      DEBUG: "0"
+      ALLOWED_HOSTS: "*"
+
+  fastapi:
+    container_name: fastapi
+    restart: unless-stopped
+    environment:
+      PG_NAME: postgres
+      PG_USER: postgres
+      PG_HOST: db
+      PG_PORT: "5432"
+      PG_PASSWORD: postgres
+    build:
+      context: .
+      dockerfile: ./dockerfiles/fastapi/Dockerfile
+    expose:
+      - 8080
+    depends_on:
+      - db
+      - s3
+    command: >
+      sh -c "granian app.main:app --reload --interface asgi --host 0.0.0.0 --port 8080 --workers 1"
+    networks:
+      - nginx_network
+      - db_network
+
+  db:
+    container_name: db
+    image: postgres:17.6-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - pgdata:/var/lib/postgresql/data/pgdata
+      - ./dockerfiles/postgresql.conf:/etc/postgresql/postgresql.conf
+    expose:
+      - 5432
+    command: [ "postgres", "-c", "config_file=/etc/postgresql/postgresql.conf", "-p", "5432", "-h", "db" ]
+    networks:
+      - db_network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 4G
+
+  client:
+    container_name: client
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: ./dockerfiles/react/Dockerfile
+    ports:
+      - 80:80
+    depends_on:
+      - django
+      - fastapi
+    networks:
+      - nginx_network
+
+volumes:
+  pgdata:
+    driver: local
+
+networks:
+  nginx_network:
+    driver: bridge
+  db_network:
+    driver: bridge
