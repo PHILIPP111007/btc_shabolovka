@@ -22,9 +22,9 @@ var DateTimePlot = (filteredConversations) => {
         x: data.flatMap(d => [d.start, d.end, null]), // Add 'null' to break lines
         y: data.flatMap(d => [d.user, d.user, null]),
         mode: 'lines+markers',
-        line: { color: 'grey', width: 2 },
+        line: { color: 'grey', width: 10 },
         marker: {
-            size: 10,
+            size: 20,
             color: ['blue', 'red'].flatMap(color => [color, color, color]) // Pattern: start, end, break
         },
         name: 'Occupancy Period',
