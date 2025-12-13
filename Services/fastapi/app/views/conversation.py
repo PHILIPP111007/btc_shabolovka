@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Request
 from sqlmodel import select, delete, or_, and_
@@ -49,6 +49,51 @@ async def get_conversation(
 
 		conversations.append(conversation)
 	return {"ok": True, "conversations": conversations}
+
+
+@router.get("/get_conversation_future_time/{room_name}/")
+async def get_conversation_future_time(
+	session: SessionDep, request: Request, room_name: str, current_time: str | None
+):
+	if not request.state.user:
+		return {"ok": False, "error": "Can not authenticate."}
+
+	current_time = datetime.strptime(current_time, "%Y-%m-%dT%H:%M")
+
+	query = await session.exec(
+		select(Conversation)
+		.where(
+			Conversation.room == room_name, Conversation.timestamp_start >= current_time
+		)
+		.order_by(Conversation.timestamp_start.asc())
+	)
+
+	query = query.unique().all()
+
+	if len(query) > 0:
+		next_event_time = query[0].timestamp_start
+
+		# Вычисляем разницу во времени
+		time_difference = next_event_time - current_time
+
+		# Форматируем разницу в читаемый вид
+		days = time_difference.days
+		hours = time_difference.seconds // 3600
+		minutes = (time_difference.seconds % 3600) // 60
+
+		# Формируем строку с timedelta
+		if days > 0:
+			time_str = f"{days} дней {hours} часов {minutes} минут"
+		elif hours > 0:
+			time_str = f"{hours} часов {minutes} минут"
+		elif minutes > 0:
+			time_str = f"{minutes} минут"
+		else:
+			time_str = "Сейчас"
+	else:
+		time_str = "Бесконечно"
+
+	return {"ok": True, "time": time_str}
 
 
 @router.post("/add_conversation/")
