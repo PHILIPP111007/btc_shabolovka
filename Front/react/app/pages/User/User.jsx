@@ -106,7 +106,9 @@ export default function App() {
     // Обновление размеров canvas
     var updateCanvasSize = (img) => {
         var canvas = canvasRef.current
-        if (!canvas) return
+        if (!canvas) {
+            return
+        }
 
         var maxWidth = 1000
         var maxHeight = 680
@@ -135,7 +137,9 @@ export default function App() {
     // Отрисовка на canvas
     var draw = useCallback(() => {
         var canvas = canvasRef.current
-        if (!canvas) return
+        if (!canvas) {
+            return
+        }
 
         var ctx = canvas.getContext("2d")
         ctx.clearRect(0, 0, canvas.width, canvas.height)
@@ -251,31 +255,66 @@ export default function App() {
         }
 
         initApp()
-    }, []); // Пустой массив зависимостей
+    }, []) // Пустой массив зависимостей
 
-    // Проверка точки в полигоне
+    // Добавьте эту функцию для получения правильных координат
+    var getCanvasCoordinates = (canvas, clientX, clientY) => {
+        var rect = canvas.getBoundingClientRect()
+
+        // Вычисляем масштаб между CSS размерами и реальными размерами canvas
+        var scaleX = canvas.width / rect.width
+        var scaleY = canvas.height / rect.height
+
+        return {
+            x: (clientX - rect.left) * scaleX,
+            y: (clientY - rect.top) * scaleY
+        }
+    }
+
     var isPointInPolygon = (x, y, polygon) => {
         let inside = false
+        var epsilon = 1.0 // Увеличьте допуск для масштабированных координат
+
         for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
             var xi = polygon[i].x, yi = polygon[i].y
             var xj = polygon[j].x, yj = polygon[j].y
 
-            var intersect = ((yi > y) !== (yj > y))
-                && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)
+            // Проверка на попадание в вершину
+            if (Math.abs(x - xi) < epsilon && Math.abs(y - yi) < epsilon) {
+                return true
+            }
 
-            if (intersect) inside = !inside
+            // Проверка на попадание на ребро
+            if (Math.abs((yj - yi) * (x - xi) - (xj - xi) * (y - yi)) < epsilon) {
+                // Коллинеарны, проверяем между ли вершинами
+                if (x >= Math.min(xi, xj) - epsilon &&
+                    x <= Math.max(xi, xj) + epsilon &&
+                    y >= Math.min(yi, yj) - epsilon &&
+                    y <= Math.max(yi, yj) + epsilon) {
+                    return true
+                }
+            }
+
+            // Основная логика пересечения луча
+            var intersect = ((yi > y) !== (yj > y))
+            if (intersect) {
+                var xIntersect = (xj - xi) * (y - yi) / (yj - yi) + xi
+                if (x <= xIntersect) { // Используйте <= для включения границы
+                    inside = !inside
+                }
+            }
         }
+
         return inside
     }
 
-    // Обработка клика по canvas
     var handleCanvasClick = (e) => {
         var canvas = canvasRef.current
-        if (!canvas) return
+        if (!canvas) {
+            return
+        }
 
-        var rect = canvas.getBoundingClientRect()
-        var x = e.clientX - rect.left
-        var y = e.clientY - rect.top
+        var { x, y } = getCanvasCoordinates(canvas, e.clientX, e.clientY)
 
         handleRoomClick(x, y)
 
@@ -356,14 +395,14 @@ export default function App() {
         }
     }
 
-    // Обработка наведения мыши
     var handleMouseMove = (e) => {
         var canvas = canvasRef.current
-        if (!canvas) return
+        if (!canvas) {
+            return
+        }
 
-        var rect = canvas.getBoundingClientRect()
-        var x = e.clientX - rect.left
-        var y = e.clientY - rect.top
+        // Используем правильные координаты
+        var { x, y } = getCanvasCoordinates(canvas, e.clientX, e.clientY)
 
         let hovered = null
 
@@ -393,13 +432,13 @@ export default function App() {
     }
 
     // Функция для получения форматированной даты
-    const getFormattedDateTime = () => {
-        const now = new Date()
-        const year = now.getFullYear()
-        const month = String(now.getMonth() + 1).padStart(2, '0')
-        const day = String(now.getDate()).padStart(2, '0')
-        const hours = String(now.getHours()).padStart(2, '0')
-        const minutes = String(now.getMinutes()).padStart(2, '0')
+    var getFormattedDateTime = () => {
+        var now = new Date()
+        var year = now.getFullYear()
+        var month = String(now.getMonth() + 1).padStart(2, '0')
+        var day = String(now.getDate()).padStart(2, '0')
+        var hours = String(now.getHours()).padStart(2, '0')
+        var minutes = String(now.getMinutes()).padStart(2, '0')
 
         return `${year}-${month}-${day}T${hours}:${minutes}`
     }
@@ -467,6 +506,8 @@ export default function App() {
 
     return (
         <div className="app">
+            <div>@{user.username}</div>
+            <br />
             <button onClick={() => logout()}>Выйти</button>
             <br />
             <br />
@@ -477,8 +518,8 @@ export default function App() {
                     <div className="canvas-container">
                         <canvas
                             ref={canvasRef}
-                            width="1000"
-                            height="680"
+                            // width="1000"
+                            // height="680"
                             onClick={handleCanvasClick}
                             onMouseMove={handleMouseMove}
                         />
@@ -539,7 +580,11 @@ export default function App() {
 
                         {
                             conversation.user === user.username &&
-                            <button onClick={() => deleteConversation(conversation.id)}>Удалить</button>
+                            <>
+                                <br />
+                                <br />
+                                <button onClick={() => deleteConversation(conversation.id)}>Удалить</button>
+                            </>
                         }
                     </div>
                 )
