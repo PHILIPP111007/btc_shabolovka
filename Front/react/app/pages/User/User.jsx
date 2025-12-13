@@ -19,28 +19,45 @@ var DateTimePlot = (filteredConversations) => {
 
     // Create separate traces for start and end markers, connected by lines
     var plotData = [{
-        x: data.flatMap(d => [d.start, d.end, null]), // Add 'null' to break lines
+        x: data.flatMap(d => [d.start, d.end, null]), // Add "null" to break lines
         y: data.flatMap(d => [d.user, d.user, null]),
-        mode: 'lines+markers',
-        line: { color: 'grey', width: 10 },
+        mode: "lines+markers",
+        line: { color: "grey", width: 10 },
         marker: {
             size: 20,
-            color: ['blue', 'red'].flatMap(color => [color, color, color]) // Pattern: start, end, break
+            color: ["blue", "red"].flatMap(color => [color, color, color]) // Pattern: start, end, break
         },
-        name: 'Occupancy Period',
-        hovertemplate: '%{y}<br>Time: %{x}<extra></extra>'
+        name: "Occupancy Period",
+        // hovertemplate: "%{y}<br>Time: %{x}<extra></extra>"
+
+        text: data.flatMap(() => ["▶️ Начало", "⏹️ Конец", ""]),
+        customdata: data.flatMap(d => {
+            // Вычисляем длительность для каждого периода
+            var duration = Math.round((d.end - d.start) / (1000 * 60)); // в минутах
+            var hours = Math.floor(duration / 60);
+            var minutes = duration % 60;
+            var durationText = hours > 0 ? `${hours}ч ${minutes}м` : `${minutes}м`;
+
+            return [durationText, durationText, ""];
+        }),
+        hovertemplate: "<b>Пользователь:</b> %{y}<br>" +
+            "<b>Время:</b> %{x|%Y-%m-%d %H:%M}<br>" +
+            "%{text}<br>" +
+            "<b>Длительность:</b> %{customdata}<br>" +
+            "<extra></extra>",
+
     }]
 
     var layout = {
-        title: 'Room Occupancy Timeline',
+        title: "Room Occupancy Timeline",
         xaxis: {
-            title: 'Time',
-            type: 'date',
-            tickformat: '%Y-%m-%d %H:%M'
+            title: "Time",
+            type: "date",
+            tickformat: "%Y-%m-%d %H:%M"
         },
         yaxis: {
-            title: 'User',
-            type: 'category'
+            title: "User",
+            type: "category"
         },
         showlegend: false,
         autosize: true,  // Добавлено: автоматический размер
@@ -52,14 +69,17 @@ var DateTimePlot = (filteredConversations) => {
             b: 50,       // bottom margin
             t: 80,       // top margin (для заголовка)
             pad: 4
-        }
+        },
+        hoverlabel: {
+            font: { size: 24 },
+        },
     }
 
     // Добавьте CSS стили для контейнера
     var containerStyle = {
-        width: '100%',
-        height: '100%',
-        minHeight: '500px'
+        width: "100%",
+        height: "100%",
+        minHeight: "500px"
     }
 
     return (
@@ -82,6 +102,7 @@ export default function App() {
     useSetUser({ username: params.username, setUser: setUser })
     var [conversations, setConversations] = useState([])
     var [filteredConversations, setFilteredConversations] = useState([])
+    var [conversationFutureTime, setConversationFutureTime] = useState(null)
 
     var [timeStampNow, setTimeStampNow] = useState(null)
     var [timeStampStart, setTimeStampStart] = useState(null)
@@ -386,7 +407,7 @@ export default function App() {
     }
 
     // Обновление информации о выборе
-    var updateSelectionInfo = () => {
+    var updateSelectionInfo = async () => {
         if (selectedRoom) {
             setSelectionInfo(selectedRoom.name)
 
@@ -394,6 +415,11 @@ export default function App() {
                 return conversation.room === selectedRoom.name
             })
             setFilteredConversations(() => [...filteredConversationsByRoom])
+
+            var data = await Fetch({ api_version: APIVersion.V2, action: `get_conversation_future_time/${selectedRoom.name}/?current_time=${timeStampNow}`, method: HttpMethod.GET })
+            if (data.ok) {
+                setConversationFutureTime(data.time)
+            }
         }
     }
 
@@ -401,10 +427,10 @@ export default function App() {
     var getFormattedDateTime = () => {
         var now = new Date()
         var year = now.getFullYear()
-        var month = String(now.getMonth() + 1).padStart(2, '0')
-        var day = String(now.getDate()).padStart(2, '0')
-        var hours = String(now.getHours()).padStart(2, '0')
-        var minutes = String(now.getMinutes()).padStart(2, '0')
+        var month = String(now.getMonth() + 1).padStart(2, "0")
+        var day = String(now.getDate()).padStart(2, "0")
+        var hours = String(now.getHours()).padStart(2, "0")
+        var minutes = String(now.getMinutes()).padStart(2, "0")
 
         return `${year}-${month}-${day}T${hours}:${minutes}`
     }
@@ -513,8 +539,11 @@ export default function App() {
                 <div className="controls-section">
                     <div className="panel control-panel">
                         <div className="selection-info">
-                            <h3>Выбранные помещения:</h3>
+                            <h3>Выбранное помещение:</h3>
                             <p>{selectionInfo}</p>
+                            {conversationFutureTime &&
+                                <p>{conversationFutureTime} часов до следующего совещания</p>
+                            }
                         </div>
                     </div>
                 </div>
