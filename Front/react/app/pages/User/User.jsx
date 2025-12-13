@@ -501,7 +501,7 @@ export default function App() {
                 </div>
             </div>
             <div>Текущая дата и время:</div>
-            <input type="datetime-local" id="currentDateTime" readOnly></input>
+            <input type="datetime-local" id="currentDateTime" value={timeStampNow} readOnly></input>
             <div>Начало совещания:</div>
             <input
                 className="form-control"
