@@ -70,6 +70,7 @@ async def get_conversation_future_time(
 
 	query = query.unique().all()
 
+	time_str = ""
 	if len(query) > 0:
 		next_event_time = query[0].timestamp_start
 

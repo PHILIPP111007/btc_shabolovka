@@ -542,7 +542,7 @@ export default function App() {
                             <h3>Выбранное помещение:</h3>
                             <p>{selectionInfo}</p>
                             {conversationFutureTime &&
-                                <p>{conversationFutureTime} часов до следующего совещания</p>
+                                <p>{conversationFutureTime} до следующего совещания</p>
                             }
                         </div>
                     </div>
