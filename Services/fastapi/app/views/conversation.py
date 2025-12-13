@@ -1,6 +1,8 @@
+from typing import Optional
+from typing import Annotated
 from datetime import datetime
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, Query
 from sqlmodel import select, delete
 
 from app.database import SessionDep
@@ -12,13 +14,24 @@ router = APIRouter(tags=["conversation"])
 
 
 @router.get("/get_conversation/")
-async def get_conversation(session: SessionDep, request: Request):
+async def get_conversation(
+	session: SessionDep, request: Request, current_time: str | None
+):
 	if not request.state.user:
 		return {"ok": False, "error": "Can not authenticate."}
 
-	query = await session.exec(
-		select(Conversation).order_by(Conversation.date_created.desc())
-	)
+	try:
+		current_time = datetime.strptime(current_time, "%Y-%m-%dT%H:%M")
+		query = await session.exec(
+			select(Conversation)
+			.where(Conversation.timestamp_end >= current_time)
+			.order_by(Conversation.date_created.desc())
+		)
+	except Exception:
+		query = await session.exec(
+			select(Conversation).order_by(Conversation.date_created.desc())
+		)
+
 	query = query.unique().all()
 	if not query:
 		return {"ok": False, "error": "Not found conversations."}

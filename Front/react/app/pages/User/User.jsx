@@ -10,15 +10,15 @@ import { useSetUser } from "../../hooks/useAuth.js"
 import { notify_success } from "../../modules/notify.js"
 import Fetch from "../../API/Fetch.js"
 
-const DateTimePlot = (filteredConversations) => {
-    const data = filteredConversations.map(item => ({
+var DateTimePlot = (filteredConversations) => {
+    var data = filteredConversations.map(item => ({
         user: item.user,
         start: new Date(item.timestamp_start),
         end: new Date(item.timestamp_end)
     }))
 
     // Create separate traces for start and end markers, connected by lines
-    const plotData = [{
+    var plotData = [{
         x: data.flatMap(d => [d.start, d.end, null]), // Add 'null' to break lines
         y: data.flatMap(d => [d.user, d.user, null]),
         mode: 'lines+markers',
@@ -31,23 +31,48 @@ const DateTimePlot = (filteredConversations) => {
         hovertemplate: '%{y}<br>Time: %{x}<extra></extra>'
     }]
 
-    const layout = {
+    var layout = {
         title: 'Room Occupancy Timeline',
         xaxis: {
             title: 'Time',
-            type: 'date', // CRITICAL: Tells Plotly this is a date axis
-            tickformat: '%Y-%m-%d %H:%M' // Optional: Control date display format
+            type: 'date',
+            tickformat: '%Y-%m-%d %H:%M'
         },
         yaxis: {
-            title: 'Room',
+            title: 'User',
             type: 'category'
         },
         showlegend: false,
-        width: 800,
+        autosize: true,  // Добавлено: автоматический размер
+        width: null,     // Добавлено: null вместо фиксированной ширины
         height: 500,
+        margin: {        // Добавлено: настройка отступов
+            l: 120,      // left margin (для имен пользователей)
+            r: 30,       // right margin
+            b: 50,       // bottom margin
+            t: 80,       // top margin (для заголовка)
+            pad: 4
+        }
     }
 
-    return <Plot data={plotData} layout={layout} />
+    // Добавьте CSS стили для контейнера
+    var containerStyle = {
+        width: '100%',
+        height: '100%',
+        minHeight: '500px'
+    }
+
+    return (
+        <div style={containerStyle}>
+            <Plot
+                data={plotData}
+                layout={layout}
+                style={containerStyle}
+                useResizeHandler={true}  // Важно: обработчик изменения размера
+                config={{ responsive: true }}  // Включение responsive режима
+            />
+        </div>
+    )
 }
 
 export default function App() {
@@ -58,6 +83,7 @@ export default function App() {
     var [conversations, setConversations] = useState([])
     var [filteredConversations, setFilteredConversations] = useState([])
 
+    var [timeStampNow, setTimeStampNow] = useState(null)
     var [timeStampStart, setTimeStampStart] = useState(null)
     var [timeStampEnd, setTimeStampEnd] = useState(null)
 
@@ -366,8 +392,20 @@ export default function App() {
         }
     }
 
+    // Функция для получения форматированной даты
+    const getFormattedDateTime = () => {
+        const now = new Date()
+        const year = now.getFullYear()
+        const month = String(now.getMonth() + 1).padStart(2, '0')
+        const day = String(now.getDate()).padStart(2, '0')
+        const hours = String(now.getHours()).padStart(2, '0')
+        const minutes = String(now.getMinutes()).padStart(2, '0')
+
+        return `${year}-${month}-${day}T${hours}:${minutes}`
+    }
+
     async function get_conversation() {
-        var data = await Fetch({ api_version: APIVersion.V2, action: "get_conversation/", method: HttpMethod.GET })
+        var data = await Fetch({ api_version: APIVersion.V2, action: `get_conversation/?current_time=${timeStampNow}`, method: HttpMethod.GET })
 
         if (data.ok) {
             setConversations(data.conversations)
@@ -416,8 +454,16 @@ export default function App() {
     }, [rooms, selectedRoom, draw])
 
     useEffect(() => {
-        get_conversation()
+        // Устанавливаем начальное значение
+        var initialDateTime = getFormattedDateTime()
+        setTimeStampNow(initialDateTime)
     }, [])
+
+    useEffect(() => {
+        if (timeStampNow) {
+            get_conversation()
+        }
+    }, [timeStampNow])
 
     return (
         <div className="app">
@@ -454,6 +500,8 @@ export default function App() {
                     </div>
                 </div>
             </div>
+            <div>Текущая дата и время:</div>
+            <input type="datetime-local" id="currentDateTime" readOnly></input>
             <div>Начало совещания:</div>
             <input
                 className="form-control"
@@ -478,6 +526,12 @@ export default function App() {
             <br />
             <br />
 
+            {selectionInfo && DateTimePlot(filteredConversations)}
+
+            <br />
+            <br />
+            <br />
+
             {
                 filteredConversations.map((conversation) =>
                     <div className="Conversation" key={conversation.id}>
@@ -490,8 +544,6 @@ export default function App() {
                     </div>
                 )
             }
-
-            {selectionInfo && DateTimePlot(filteredConversations)}
         </div>
     )
 }
