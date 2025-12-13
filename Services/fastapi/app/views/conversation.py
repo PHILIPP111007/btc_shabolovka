@@ -1,9 +1,7 @@
-from typing import Optional
-from typing import Annotated
 from datetime import datetime
 
-from fastapi import APIRouter, Request, Query
-from sqlmodel import select, delete
+from fastapi import APIRouter, Request
+from sqlmodel import select, delete, or_, and_
 
 from app.database import SessionDep
 from app.models import Conversation
@@ -65,6 +63,38 @@ async def add_conversation(
 			conversation.timestamp_start, "%Y-%m-%dT%H:%M"
 		)
 		timestamp_end = datetime.strptime(conversation.timestamp_end, "%Y-%m-%dT%H:%M")
+
+		query = await session.exec(
+			select(Conversation).where(
+				Conversation.room == conversation.room,
+				or_(
+					# Случай 1: новое начало внутри существующего промежутка
+					and_(
+						Conversation.timestamp_start <= timestamp_start,
+						Conversation.timestamp_end > timestamp_start,
+					),
+					# Случай 2: новый конец внутри существующего промежутка
+					and_(
+						Conversation.timestamp_start < timestamp_end,
+						Conversation.timestamp_end >= timestamp_end,
+					),
+					# Случай 3: новый полностью содержит существующий
+					and_(
+						Conversation.timestamp_start >= timestamp_start,
+						Conversation.timestamp_end <= timestamp_end,
+					),
+					# Случай 4: существующий полностью содержит новый
+					and_(
+						Conversation.timestamp_start <= timestamp_start,
+						Conversation.timestamp_end >= timestamp_end,
+					),
+				),
+			)
+		)
+		query = query.unique().all()
+
+		if len(query) > 0:
+			return {"ok": False, "error": "Пересечение временных промежутков!"}
 
 		conversation_obj = Conversation(
 			user=request.state.user.username,

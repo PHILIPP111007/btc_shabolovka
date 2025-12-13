@@ -7,7 +7,7 @@ import { AuthContext, UserContext } from "../../data/context.js"
 import { HttpMethod, APIVersion } from "../../data/enums.js"
 import { ROOMS } from "../../data/rooms.js"
 import { useSetUser } from "../../hooks/useAuth.js"
-import { notify_success } from "../../modules/notify.js"
+import { notify_success, notify_error } from "../../modules/notify.js"
 import Fetch from "../../API/Fetch.js"
 
 var DateTimePlot = (filteredConversations) => {
@@ -464,6 +464,8 @@ export default function App() {
 
         if (data.ok) {
             notify_success("Дата сохранена")
+        } else if (data.error) {
+            notify_error(data.error)
         }
     }
 
