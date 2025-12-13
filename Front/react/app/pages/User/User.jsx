@@ -223,40 +223,6 @@ export default function App() {
         img.src = DEFAULT_IMAGE_PATH
     }
 
-    // Обновляем useEffect
-    useEffect(() => {
-        // Инициализация помещений
-        var roomsData = initializeRooms()
-        setRooms(roomsData)
-
-        // Загрузка изображения
-        loadDefaultImage()
-    }, []) // Пустой массив зависимостей
-
-    // Инициализация
-    useEffect(() => {
-        initializeRooms()
-        loadDefaultImage()
-    }, [])
-
-    // Обновляем useEffect
-    useEffect(() => {
-        var initApp = () => {
-            // Инициализация помещений (если не инициализированы в useState)
-            if (Object.keys(rooms).length === 0) {
-                var roomsData = initializeRooms()
-                setRooms(roomsData)
-            }
-
-            // Загрузка изображения с задержкой для избежания синхронных обновлений
-            setTimeout(() => {
-                loadDefaultImage()
-            }, 0)
-        }
-
-        initApp()
-    }, []) // Пустой массив зависимостей
-
     // Добавьте эту функцию для получения правильных координат
     var getCanvasCoordinates = (canvas, clientX, clientY) => {
         var rect = canvas.getBoundingClientRect()
@@ -487,6 +453,16 @@ export default function App() {
         localStorage.clear()
         setIsAuth(false)
     }
+
+    useEffect(() => {
+        var initApp = () => {
+            var roomsData = initializeRooms()
+            setRooms(roomsData)
+            loadDefaultImage()
+        }
+
+        initApp()
+    }, [])
 
     // Обновление отрисовки при изменении данных
     useEffect(() => {

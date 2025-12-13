@@ -7,7 +7,6 @@ import { HttpMethod, APIVersion } from "../data/enums.js"
 import Fetch from "../API/Fetch.js"
 import getToken from "../modules/getToken.js"
 import Input from "./components/UI/Input.jsx"
-import Button from "./components/UI/Button.jsx"
 
 export default function Register() {
 
@@ -44,7 +43,7 @@ export default function Register() {
 
             if (typeof data.username === "string") {
                 setUser({ ...data })
-                notify_success('Successfully registered!')
+                notify_success("Успешно зарегистрированы!")
                 navigate("/login/")
             }
         }
