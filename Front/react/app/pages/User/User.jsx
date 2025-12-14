@@ -95,7 +95,7 @@ var DateTimePlot = (filteredConversations) => {
     )
 }
 
-export default function App() {
+export default function User() {
     var params = useParams()
     var { setIsAuth } = use(AuthContext)
     var { user, setUser } = use(UserContext)
