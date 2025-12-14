@@ -16,8 +16,6 @@ services:
     networks:
       - nginx_network
       - db_network
-      - s3_network
-      - cache_network
     environment:
       PG_NAME: postgres
       PG_USER: postgres
