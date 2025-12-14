@@ -547,7 +547,7 @@ export default function App() {
                                 <p>{conversationFutureTime} до следующего совещания</p>
                             }
                         </div>
-                        <select value={roomOrTable} onChange={(e) => setRoomOrTable(e.target.value)}>
+                        <select className="form-select" value={roomOrTable} onChange={(e) => setRoomOrTable(e.target.value)}>
                             <option value="room">Помещения</option>
                             <option value="table" >Столы</option>
                         </select>
