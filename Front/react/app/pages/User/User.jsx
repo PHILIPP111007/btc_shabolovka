@@ -115,7 +115,6 @@ export default function User() {
     var [selectedRoom, setSelectedRoom] = useState(null)
     var [backgroundImage, setBackgroundImage] = useState(null)
     var [isImageLoaded, setIsImageLoaded] = useState(false)
-    var [isLoading, setIsLoading] = useState(false)
     var [selectionInfo, setSelectionInfo] = useState(null)
     var [hoveredObject, setHoveredObject] = useState(null)
 
@@ -221,28 +220,22 @@ export default function User() {
     }, [rooms, backgroundImage, isImageLoaded, hoveredObject])
 
     var loadDefaultImage = () => {
-        setIsLoading(true)
-
         var img = new Image()
 
         img.onload = () => {
             setBackgroundImage(img)
             setIsImageLoaded(true)
-            setIsLoading(false)
             updateCanvasSize(img)
             draw()
         }
 
         img.onerror = () => {
             console.error("Не удалось загрузить изображение по пути:", DEFAULT_IMAGE_PATH)
-            setIsLoading(false)
         }
 
-        // Загружаем изображение из public папки
         img.src = DEFAULT_IMAGE_PATH
     }
 
-    // Добавьте эту функцию для получения правильных координат
     var getCanvasCoordinates = (canvas, clientX, clientY) => {
         var rect = canvas.getBoundingClientRect()
 
@@ -524,17 +517,9 @@ export default function User() {
                     <div className="canvas-container">
                         <canvas
                             ref={canvasRef}
-                            // width="1000"
-                            // height="680"
                             onClick={handleCanvasClick}
                             onMouseMove={handleMouseMove}
                         />
-                        {isLoading && (
-                            <div className="loading-overlay">
-                                <div className="loading-spinner"></div>
-                                <p>Загрузка изображения...</p>
-                            </div>
-                        )}
                     </div>
                 </div>
 
