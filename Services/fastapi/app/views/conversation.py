@@ -35,16 +35,50 @@ async def get_conversation(
 		return {"ok": False, "error": "Not found conversations."}
 
 	conversations = []
-	for conversation in query:
-		timestamp_start = conversation.timestamp_start.strftime(DATETIME_FORMAT)
-		timestamp_end = conversation.timestamp_end.strftime(DATETIME_FORMAT)
+	for item in query:
+		timestamp_start = item.timestamp_start.strftime(DATETIME_FORMAT)
+		timestamp_end = item.timestamp_end.strftime(DATETIME_FORMAT)
+
+		how_much_time_is_left = item.timestamp_start - current_time
+		days = how_much_time_is_left.days
+		hours = how_much_time_is_left.seconds // 3600
+		minutes = (how_much_time_is_left.seconds % 3600) // 60
+
+		# Формируем строку с timedelta
+		if days > 0:
+			how_much_time_is_left_str = f"{days} дней {hours} часов {minutes} минут"
+		elif hours > 0:
+			how_much_time_is_left_str = f"{hours} часов {minutes} минут"
+		elif minutes > 0:
+			how_much_time_is_left_str = f"{minutes} минут"
+		else:
+			how_much_time_is_left_str = "Сейчас"
+
+		how_long_will_the_conversation_last = item.timestamp_end - item.timestamp_start
+		days = how_long_will_the_conversation_last.days
+		hours = how_long_will_the_conversation_last.seconds // 3600
+		minutes = (how_long_will_the_conversation_last.seconds % 3600) // 60
+
+		# Формируем строку с timedelta
+		if days > 0:
+			how_long_will_the_conversation_last_str = (
+				f"{days} дней {hours} часов {minutes} минут"
+			)
+		elif hours > 0:
+			how_long_will_the_conversation_last_str = f"{hours} часов {minutes} минут"
+		elif minutes > 0:
+			how_long_will_the_conversation_last_str = f"{minutes} минут"
+		else:
+			how_long_will_the_conversation_last_str = "Сейчас"
 
 		conversation = {
-			"id": conversation.id,
-			"user": conversation.user,
-			"room": conversation.room,
+			"id": item.id,
+			"user": item.user,
+			"room": item.room,
 			"timestamp_start": timestamp_start,
 			"timestamp_end": timestamp_end,
+			"how_much_time_is_left": how_much_time_is_left_str,
+			"how_long_will_the_conversation_last": how_long_will_the_conversation_last_str,
 		}
 
 		conversations.append(conversation)

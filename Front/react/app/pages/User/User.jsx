@@ -510,7 +510,9 @@ export default function App() {
 
     return (
         <div className="app">
-            <div>@{user.username}</div>
+            <div>
+                <strong>@{user.username}</strong>
+            </div>
             <br />
             <button onClick={() => logout()}>Выйти</button>
             <br />
@@ -583,7 +585,11 @@ export default function App() {
             {
                 filteredConversations.map((conversation) =>
                     <div className="Conversation" key={conversation.id}>
-                        {conversation.user} "{conversation.room}" {conversation.timestamp_start} -- {conversation.timestamp_end}
+                        <strong>@{conversation.user}</strong> "{conversation.room}" {conversation.timestamp_start} -- {conversation.timestamp_end}
+                        <br />
+                        Будет длиться {conversation.how_long_will_the_conversation_last}
+                        <br />
+                        Осталось {conversation.how_much_time_is_left} до совещания
 
                         {
                             conversation.user === user.username &&
