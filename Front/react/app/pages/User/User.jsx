@@ -582,9 +582,16 @@ export default function App() {
             <br />
             <br />
 
-            {
-                filteredConversations.map((conversation) =>
-                    <div className="Conversation" key={conversation.id}>
+            {filteredConversations.map((conversation) => {
+                // Проверяем, меньше ли 15 минут до начала
+                const minutesLeft = parseInt(conversation.total_minutes || 0)
+                const shouldFlash = minutesLeft > 0 && minutesLeft < 15
+
+                return (
+                    <div
+                        className={`Conversation ${shouldFlash ? 'flashing' : ''}`}
+                        key={conversation.id}
+                    >
                         <strong>@{conversation.user}</strong> "{conversation.room}" {conversation.timestamp_start} -- {conversation.timestamp_end}
                         <br />
                         Будет длиться {conversation.how_long_will_the_conversation_last}
@@ -601,7 +608,7 @@ export default function App() {
                         }
                     </div>
                 )
-            }
+            })}
         </div>
     )
 }

@@ -43,7 +43,6 @@ async def get_conversation(
 		days = how_much_time_is_left.days
 		hours = how_much_time_is_left.seconds // 3600
 		minutes = (how_much_time_is_left.seconds % 3600) // 60
-
 		# Формируем строку с timedelta
 		if days > 0:
 			how_much_time_is_left_str = f"{days} дней {hours} часов {minutes} минут"
@@ -53,12 +52,12 @@ async def get_conversation(
 			how_much_time_is_left_str = f"{minutes} минут"
 		else:
 			how_much_time_is_left_str = "Сейчас"
+		total_minutes = (days * 24 * 60) + (hours * 60) + minutes
 
 		how_long_will_the_conversation_last = item.timestamp_end - item.timestamp_start
 		days = how_long_will_the_conversation_last.days
 		hours = how_long_will_the_conversation_last.seconds // 3600
 		minutes = (how_long_will_the_conversation_last.seconds % 3600) // 60
-
 		# Формируем строку с timedelta
 		if days > 0:
 			how_long_will_the_conversation_last_str = (
@@ -79,6 +78,7 @@ async def get_conversation(
 			"timestamp_end": timestamp_end,
 			"how_much_time_is_left": how_much_time_is_left_str,
 			"how_long_will_the_conversation_last": how_long_will_the_conversation_last_str,
+			"total_minutes": total_minutes,
 		}
 
 		conversations.append(conversation)
