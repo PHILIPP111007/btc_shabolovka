@@ -32,3 +32,14 @@ export var ROOMS = {
         type: "room"
     },
 }
+
+export var TABLES = {
+    roomA: {
+        id: "1",
+        name: "Помещение A: стол 1",
+        points: [{ x: 50, y: 100 }, { x: 240, y: 100 }, { x: 240, y: 260 }, { x: 50, y: 260 }],
+        color: "rgba(248, 249, 250, 0.3)",
+        originalColor: "rgba(248, 249, 250, 0.3)",
+        type: "room"
+    },
+}

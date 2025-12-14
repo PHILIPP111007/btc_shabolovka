@@ -5,7 +5,7 @@ import { useParams } from "react-router-dom"
 import Plot from "react-plotly.js"
 import { AuthContext, UserContext } from "../../data/context.js"
 import { HttpMethod, APIVersion } from "../../data/enums.js"
-import { ROOMS } from "../../data/rooms.js"
+import { ROOMS, TABLES } from "../../data/rooms.js"
 import { useSetUser } from "../../hooks/useAuth.js"
 import { notify_success, notify_error } from "../../modules/notify.js"
 import Fetch from "../../API/Fetch.js"
@@ -100,6 +100,8 @@ export default function App() {
     var { setIsAuth } = use(AuthContext)
     var { user, setUser } = use(UserContext)
     useSetUser({ username: params.username, setUser: setUser })
+
+    var [roomOrTable, setRoomOrTable] = useState("room")
     var [conversations, setConversations] = useState([])
     var [filteredConversations, setFilteredConversations] = useState([])
     var [conversationFutureTime, setConversationFutureTime] = useState(null)
@@ -119,10 +121,6 @@ export default function App() {
 
     // Данные о помещениях и номерах
     var [rooms, setRooms] = useState([])
-
-    var initializeRooms = () => {
-        return ROOMS
-    }
 
     // Обновление размеров canvas
     var updateCanvasSize = (img) => {
@@ -481,14 +479,16 @@ export default function App() {
     }
 
     useEffect(() => {
-        var initApp = () => {
-            var roomsData = initializeRooms()
-            setRooms(roomsData)
-            loadDefaultImage()
-        }
+        var data
 
-        initApp()
-    }, [])
+        if (roomOrTable === "room") {
+            data = ROOMS
+        } else if (roomOrTable === "table") {
+            data = TABLES
+        }
+        setRooms(data)
+        loadDefaultImage()
+    }, [roomOrTable])
 
     // Обновление отрисовки при изменении данных
     useEffect(() => {
@@ -547,6 +547,10 @@ export default function App() {
                                 <p>{conversationFutureTime} до следующего совещания</p>
                             }
                         </div>
+                        <select value={roomOrTable} onChange={(e) => setRoomOrTable(e.target.value)}>
+                            <option value="room">Помещения</option>
+                            <option value="table" >Столы</option>
+                        </select>
                     </div>
                 </div>
             </div>
