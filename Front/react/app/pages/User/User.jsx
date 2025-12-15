@@ -585,7 +585,7 @@ export default function User() {
                         <br />
                         Будет длиться {conversation.how_long_will_the_conversation_last}
                         <br />
-                        Осталось {conversation.how_much_time_is_left} до совещания
+                        {conversation.how_much_time_is_left}
 
                         {
                             conversation.user === user.username &&

@@ -40,18 +40,30 @@ async def get_conversation(
 		timestamp_end = item.timestamp_end.strftime(DATETIME_FORMAT)
 
 		how_much_time_is_left = item.timestamp_start - current_time
+		total_seconds = how_much_time_is_left.total_seconds()
 		days = how_much_time_is_left.days
 		hours = how_much_time_is_left.seconds // 3600
 		minutes = (how_much_time_is_left.seconds % 3600) // 60
+
 		# Формируем строку с timedelta
-		if days > 0:
-			how_much_time_is_left_str = f"{days} дней {hours} часов {minutes} минут"
+		if total_seconds < 0:
+			# Проверяем, идет ли совещание прямо сейчас
+			if current_time < item.timestamp_end:
+				how_much_time_is_left_str = "Идет"
+			else:
+				how_much_time_is_left_str = "Завершено"
+		elif days > 0:
+			how_much_time_is_left_str = (
+				f"Осталось {days} дней {hours} часов {minutes} минут до совещания"
+			)
 		elif hours > 0:
-			how_much_time_is_left_str = f"{hours} часов {minutes} минут"
+			how_much_time_is_left_str = (
+				f"Осталось {hours} часов {minutes} минут до совещания"
+			)
 		elif minutes > 0:
-			how_much_time_is_left_str = f"{minutes} минут"
+			how_much_time_is_left_str = f"Осталось {minutes} минут до совещания"
 		else:
-			how_much_time_is_left_str = "Сейчас"
+			how_much_time_is_left_str = "Идет"
 		total_minutes = (days * 24 * 60) + (hours * 60) + minutes
 
 		how_long_will_the_conversation_last = item.timestamp_end - item.timestamp_start
