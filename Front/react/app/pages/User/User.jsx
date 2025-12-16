@@ -582,8 +582,8 @@ export default function User() {
 
             {filteredConversations.map((conversation) => {
                 // Проверяем, меньше ли 15 минут до начала
-                const minutesLeft = parseInt(conversation.total_minutes || 0)
-                const shouldFlash = minutesLeft > 0 && minutesLeft < 15
+                var minutesLeft = parseInt(conversation.total_minutes || 0)
+                var shouldFlash = minutesLeft > 0 && minutesLeft < 15
 
                 return (
                     <div
