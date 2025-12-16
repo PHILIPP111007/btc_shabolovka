@@ -559,7 +559,7 @@ export default function User() {
             />
             <br />
             <textarea
-                className="ConversationDescription"
+                className="ConversationDescription form-control"
                 placeholder="Описание"
                 value={conversationDescription}
                 onChange={(e) => setConversationDescription(e.target.value)}
@@ -595,10 +595,17 @@ export default function User() {
                         Будет длиться {conversation.how_long_will_the_conversation_last}
                         <br />
                         {conversation.how_much_time_is_left}
-                        <br />
-                        Описание:
-                        <br />
-                        {conversation.description}
+
+                        {
+                            conversation.description
+                            &&
+                            <>
+                                <br />
+                                Описание:
+                                <br />
+                                {conversation.description}
+                            </>
+                        }
 
                         {
                             conversation.user === user.username &&

@@ -91,6 +91,7 @@ async def get_conversation(
 			"how_much_time_is_left": how_much_time_is_left_str,
 			"how_long_will_the_conversation_last": how_long_will_the_conversation_last_str,
 			"total_minutes": total_minutes,
+			"description": item.description,
 		}
 
 		conversations.append(conversation)
