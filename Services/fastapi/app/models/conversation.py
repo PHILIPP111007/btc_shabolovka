@@ -13,4 +13,5 @@ class Conversation(SQLModel, table=True):
 	room: str
 	timestamp_start: datetime
 	timestamp_end: datetime
+	description: str
 	date_created: datetime = Field(default_factory=lambda: datetime.now())

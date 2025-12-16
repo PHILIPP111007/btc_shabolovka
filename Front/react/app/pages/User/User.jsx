@@ -109,6 +109,7 @@ export default function User() {
     var [timeStampNow, setTimeStampNow] = useState(null)
     var [timeStampStart, setTimeStampStart] = useState(null)
     var [timeStampEnd, setTimeStampEnd] = useState(null)
+    var [conversationDescription, setConversationDescription] = useState("")
 
     var selectedColor = "#2ecc71"
     var canvasRef = useRef(null)
@@ -441,6 +442,7 @@ export default function User() {
             room: String(selectionInfo),
             timestamp_start: String(timeStampStart),
             timestamp_end: String(timeStampEnd),
+            description: conversationDescription,
         }
 
         var data = await Fetch({ api_version: APIVersion.V2, action: "add_conversation/", method: HttpMethod.POST, body: body })
@@ -556,6 +558,13 @@ export default function User() {
                 onChange={(e) => setTimeStampEnd(e.target.value)}
             />
             <br />
+            <textarea
+                className="ConversationDescription"
+                placeholder="Описание"
+                value={conversationDescription}
+                onChange={(e) => setConversationDescription(e.target.value)}
+            ></textarea>
+            <br />
             <button
                 className="setConversationButton"
                 onClick={() => add_conversation()}
@@ -586,6 +595,10 @@ export default function User() {
                         Будет длиться {conversation.how_long_will_the_conversation_last}
                         <br />
                         {conversation.how_much_time_is_left}
+                        <br />
+                        Описание:
+                        <br />
+                        {conversation.description}
 
                         {
                             conversation.user === user.username &&

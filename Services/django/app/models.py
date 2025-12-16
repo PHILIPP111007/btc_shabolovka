@@ -54,4 +54,5 @@ class Conversation(models.Model):
 	room = models.CharField(max_length=150)
 	timestamp_start = models.DateTimeField()
 	timestamp_end = models.DateTimeField()
+	description = models.CharField(max_length=150)
 	date_created = models.DateTimeField(auto_now_add=True)

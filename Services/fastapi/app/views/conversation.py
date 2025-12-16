@@ -193,6 +193,7 @@ async def add_conversation(
 			room=conversation.room,
 			timestamp_start=timestamp_start,
 			timestamp_end=timestamp_end,
+			description=conversation.description,
 		)
 		session.add(conversation_obj)
 		await session.commit()

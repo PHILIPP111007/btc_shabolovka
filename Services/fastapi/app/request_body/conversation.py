@@ -6,3 +6,4 @@ class ConversationPOST(BaseModel):
 	room: str
 	timestamp_start: str
 	timestamp_end: str
+	description: str
