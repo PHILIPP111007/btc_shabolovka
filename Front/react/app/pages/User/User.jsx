@@ -601,6 +601,7 @@ export default function User() {
                             &&
                             <>
                                 <br />
+                                <br />
                                 Описание:
                                 <br />
                                 {conversation.description}
