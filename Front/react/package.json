@@ -1,12 +1,11 @@
 {
-  "name": "phils_network",
+  "name": "btc_shabolovka",
   "version": "1.0.0",
   "license": "MIT",
   "type": "module",
   "author": {
     "name": "Philipp Roshchin",
-    "email": "r.phil@yandex.ru",
-    "url": "https://github.com/PHILIPP111007/phils_network"
+    "email": "r.phil@yandex.ru"
   },
   "scripts": {
     "dev": "vite",
@@ -17,7 +16,6 @@
   "private": true,
   "homepage": "/",
   "dependencies": {
-    "@preact/signals-react": "3.6.1",
     "@tailwindcss/vite": "^4.1.18",
     "babel-plugin-react-compiler": "^1.0.0",
     "bootstrap": "^5.3.8",
