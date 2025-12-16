@@ -504,7 +504,7 @@ export default function User() {
     }, [timeStampNow])
 
     return (
-        <div className="app">
+        <div className="User">
             <div>
                 <strong>@{user.username}</strong>
             </div>
